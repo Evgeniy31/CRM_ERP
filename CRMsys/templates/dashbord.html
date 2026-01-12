@@ -1,0 +1,776 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд - Система управления заявками{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок с приветствием -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-2">
+                                <i class="fas fa-tachometer-alt me-2"></i>Дашборд
+                            </h1>
+                            <p class="text-muted mb-0">
+                                Добро пожаловать, {{ user.full_name }}! 
+                                Сегодня {{ now.strftime('%d.%m.%Y') }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary" id="refreshBtn">
+                                    <i class="fas fa-sync-alt"></i> Обновить
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#helpModal">
+                                    <i class="fas fa-question-circle"></i> Помощь
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия (зависит от роли) -->
+    {% if user.role in ['manager', 'supervisor', 'admin'] %}
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-bolt me-2"></i>Быстрые действия
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if user.can_create_request() %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('requests.create_request') }}" class="btn btn-success w-100 py-3">
+                                <i class="fas fa-plus-circle fa-2x mb-2"></i><br>
+                                Новая заявка
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if user.role in ['supervisor', 'admin'] %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('requests.request_list', status='pending_approval') }}" 
+                               class="btn btn-warning w-100 py-3 {% if pending_count == 0 %}disabled{% endif %}">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i><br>
+                                Одобрить заявки
+                                {% if pending_count > 0 %}
+                                <span class="badge bg-danger">{{ pending_count }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if user.role in ['production_head', 'supervisor', 'admin'] %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('requests.request_list', status='in_progress') }}" 
+                               class="btn btn-info w-100 py-3">
+                                <i class="fas fa-cogs fa-2x mb-2"></i><br>
+                                Производство
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('requests.request_list') }}" class="btn btn-secondary w-100 py-3">
+                                <i class="fas fa-search fa-2x mb-2"></i><br>
+                                Поиск заявок
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        {% for stat_name, stat_value in stats.items() %}
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card h-100 {% if stat_name == 'delayed' and stat_value > 0 %}border-danger{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if stat_name == 'total' %}
+                            <h6 class="text-muted">Всего заявок</h6>
+                            {% elif stat_name == 'in_progress' %}
+                            <h6 class="text-muted">В работе</h6>
+                            {% elif stat_name == 'completed' %}
+                            <h6 class="text-muted">Завершено</h6>
+                            {% elif stat_name == 'pending' %}
+                            <h6 class="text-muted">На одобрении</h6>
+                            {% elif stat_name == 'delayed' %}
+                            <h6 class="text-muted">С опозданием</h6>
+                            {% elif stat_name == 'completion_avg' %}
+                            <h6 class="text-muted">Средняя готовность</h6>
+                            {% else %}
+                            <h6 class="text-muted">{{ stat_name|replace('_', ' ')|title }}</h6>
+                            {% endif %}
+                            <h3 class="mb-0">
+                                {% if stat_name == 'completion_avg' %}
+                                {{ "%.1f"|format(stat_value) }}%
+                                {% else %}
+                                {{ stat_value }}
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="avatar">
+                            {% if stat_name == 'total' %}
+                            <i class="fas fa-clipboard-list fa-2x text-primary"></i>
+                            {% elif stat_name == 'in_progress' %}
+                            <i class="fas fa-cogs fa-2x text-warning"></i>
+                            {% elif stat_name == 'completed' %}
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                            {% elif stat_name == 'pending' %}
+                            <i class="fas fa-clock fa-2x text-info"></i>
+                            {% elif stat_name == 'delayed' %}
+                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                            {% elif stat_name == 'completion_avg' %}
+                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                            {% else %}
+                            <i class="fas fa-chart-bar fa-2x text-secondary"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Основной контент дашборда -->
+    <div class="row">
+        <!-- Левая колонка: Список заявок/задач -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                        {% if user.role == 'executor' %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tasks-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#tasks" type="button">
+                                <i class="fas fa-tasks me-2"></i>Мои задачи
+                            </button>
+                        </li>
+                        {% else %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="requests-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#requests" type="button">
+                                <i class="fas fa-clipboard-list me-2"></i>Последние заявки
+                            </button>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="activity-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#activity" type="button">
+                                <i class="fas fa-history me-2"></i>Активность
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card-body">
+                    <div class="tab-content" id="myTabContent">
+                        {% if user.role == 'executor' %}
+                        <!-- Дашборд исполнителя -->
+                        <div class="tab-pane fade show active" id="tasks" role="tabpanel">
+                            {% if tasks %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Задача</th>
+                                            <th>Заявка</th>
+                                            <th>Срок</th>
+                                            <th>Статус</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for task in tasks %}
+                                        <tr class="{% if task.deadline and task.deadline < now and task.status != 'completed' %}table-danger{% endif %}">
+                                            <td>
+                                                <strong>{{ task.title|truncate(30) }}</strong><br>
+                                                <small class="text-muted">{{ task.description|truncate(50) if task.description else 'Без описания' }}</small>
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('requests.view_request', request_id=task.request.id) }}">
+                                                    {{ task.request.request_number }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if task.deadline %}
+                                                {{ task.deadline.strftime('%d.%m.%Y') }}
+                                                {% if task.deadline < now and task.status != 'completed' %}
+                                                <br><span class="badge bg-danger">Просрочено</span>
+                                                {% endif %}
+                                                {% else %}
+                                                <span class="text-muted">Не задан</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if task.status == 'pending' %}
+                                                <span class="badge bg-secondary">Ожидание</span>
+                                                {% elif task.status == 'in_progress' %}
+                                                <span class="badge bg-warning">В работе</span>
+                                                {% elif task.status == 'completed' %}
+                                                <span class="badge bg-success">Завершено</span>
+                                                {% elif task.status == 'blocked' %}
+                                                <span class="badge bg-danger">Заблокировано</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" 
+                                                            onclick="updateTaskStatus({{ task.id }}, 'in_progress')"
+                                                            {% if task.status != 'pending' %}disabled{% endif %}>
+                                                        <i class="fas fa-play"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-success" 
+                                                            onclick="updateTaskStatus({{ task.id }}, 'completed')"
+                                                            {% if task.status != 'in_progress' %}disabled{% endif %}>
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#taskDetailModal{{ task.id }}">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                <h5>Нет назначенных задач</h5>
+                                <p class="text-muted">Все задачи выполнены или ожидают назначения</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% else %}
+                        <!-- Дашборд для других ролей -->
+                        <div class="tab-pane fade show active" id="requests" role="tabpanel">
+                            {% if requests %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Номер</th>
+                                            <th>Название</th>
+                                            <th>Статус</th>
+                                            <th>Приоритет</th>
+                                            <th>Срок</th>
+                                            <th>Готовность</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for req in requests %}
+                                        <tr class="{% if req.deadline and req.deadline < now and req.status not in ['completed', 'shipped', 'cancelled'] %}table-danger{% endif %}">
+                                            <td>
+                                                <strong>{{ req.request_number }}</strong>
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('requests.view_request', request_id=req.id) }}">
+                                                    {{ req.title|truncate(40) }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if req.status == 'draft' %}
+                                                <span class="badge bg-secondary">Черновик</span>
+                                                {% elif req.status == 'pending_validation' %}
+                                                <span class="badge bg-info">На валидации</span>
+                                                {% elif req.status == 'pending_approval' %}
+                                                <span class="badge bg-warning">На одобрении</span>
+                                                {% elif req.status == 'approved' %}
+                                                <span class="badge bg-primary">Одобрена</span>
+                                                {% elif req.status == 'in_progress' %}
+                                                <span class="badge bg-success">В работе</span>
+                                                {% elif req.status == 'completed' %}
+                                                <span class="badge bg-success">Завершена</span>
+                                                {% elif req.status == 'shipped' %}
+                                                <span class="badge bg-dark">Отгружена</span>
+                                                {% elif req.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Отменена</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if req.priority == 'low' %}
+                                                <span class="badge bg-secondary">Низкий</span>
+                                                {% elif req.priority == 'medium' %}
+                                                <span class="badge bg-info">Средний</span>
+                                                {% elif req.priority == 'high' %}
+                                                <span class="badge bg-warning">Высокий</span>
+                                                {% elif req.priority == 'critical' %}
+                                                <span class="badge bg-danger">Критический</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if req.deadline %}
+                                                {{ req.deadline.strftime('%d.%m.%Y') }}
+                                                {% else %}
+                                                <span class="text-muted">Не задан</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar {% if req.completion_percentage < 30 %}bg-danger{% elif req.completion_percentage < 70 %}bg-warning{% else %}bg-success{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ req.completion_percentage }}%;"
+                                                         aria-valuenow="{{ req.completion_percentage }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                        {{ req.completion_percentage }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('requests.view_request', request_id=req.id) }}" 
+                                                       class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if req.status == 'pending_approval' and user.can_approve_request() %}
+                                                    <a href="{{ url_for('requests.approve_request', request_id=req.id) }}" 
+                                                       class="btn btn-outline-success"
+                                                       onclick="return confirm('Одобрить заявку {{ req.request_number }}?')">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                                <h5>Нет заявок</h5>
+                                <p class="text-muted">
+                                    {% if user.can_create_request() %}
+                                    <a href="{{ url_for('requests.create_request') }}" class="btn btn-primary mt-2">
+                                        Создать первую заявку
+                                    </a>
+                                    {% else %}
+                                    Ожидайте назначения заявок
+                                    {% endif %}
+                                </p>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('requests.request_list') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-list me-1"></i> Все заявки
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Вкладка активности -->
+                        <div class="tab-pane fade" id="activity" role="tabpanel">
+                            <div class="timeline">
+                                {% set activities = get_recent_activities(10) %}
+                                {% if activities %}
+                                    {% for activity in activities %}
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker">
+                                            <i class="fas fa-circle 
+                                                {% if activity.type == 'create' %}text-success
+                                                {% elif activity.type == 'update' %}text-primary
+                                                {% elif activity.type == 'delete' %}text-danger
+                                                {% else %}text-secondary{% endif %}">
+                                            </i>
+                                        </div>
+                                        <div class="timeline-content">
+                                            <div class="d-flex justify-content-between">
+                                                <strong>{{ activity.description }}</strong>
+                                                <small class="text-muted">{{ activity.timestamp.strftime('%H:%M') }}</small>
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ activity.timestamp.strftime('%d.%m.%Y') }} • 
+                                                {{ activity.user.full_name if activity.user else 'Система' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                        <h5>Нет активности</h5>
+                                        <p class="text-muted">Здесь будет отображаться история действий</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка: Графики и виджеты -->
+        <div class="col-lg-4 mb-4">
+            <!-- Виджет KPI (для исполнителей и менеджеров) -->
+            {% if user.role in ['executor', 'manager', 'supervisor'] %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-2"></i>Мои показатели
+                </div>
+                <div class="card-body text-center">
+                    {% set kpi_data = get_user_kpi(user.id) %}
+                    <div class="mb-3">
+                        <h2 class="display-4 {% if kpi_data.total_score >= 80 %}text-success{% elif kpi_data.total_score >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ "%.1f"|format(kpi_data.total_score) }}
+                        </h2>
+                        <p class="text-muted">Общий балл KPI</p>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5>{{ kpi_data.completed_tasks }}</h5>
+                            <small class="text-muted">Задач выполнено</small>
+                        </div>
+                        <div class="col-6">
+                            <h5>{{ "%.1f"|format(kpi_data.on_time_rate) }}%</h5>
+                            <small class="text-muted">В срок</small>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mt-3" style="height: 10px;">
+                        <div class="progress-bar bg-success" style="width: {{ kpi_data.total_score }}%"></div>
+                    </div>
+                    
+                    <a href="#" class="btn btn-outline-primary btn-sm mt-3">
+                        <i class="fas fa-chart-bar me-1"></i> Детальная статистика
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Виджет прогноза (для руководителей и начальства) -->
+            {% if user.role in ['supervisor', 'production_head', 'admin'] %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Риски срыва сроков
+                </div>
+                <div class="card-body">
+                    {% set risky_requests = get_risky_requests(3) %}
+                    {% if risky_requests %}
+                        {% for req in risky_requests %}
+                        <div class="mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <a href="{{ url_for('requests.view_request', request_id=req.id) }}">
+                                            {{ req.request_number }}
+                                        </a>
+                                    </h6>
+                                    <p class="mb-1 small">{{ req.title|truncate(40) }}</p>
+                                </div>
+                                <span class="badge bg-danger">Высокий риск</span>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    Срок: {{ req.deadline.strftime('%d.%m.%Y') if req.deadline else 'Не задан' }}<br>
+                                    Причина: {{ req.risk_reason|default('Задержка комплектующих') }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <p class="text-muted mb-0">Критических рисков не обнаружено</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Виджет уведомлений -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-bell me-2"></i>Последние уведомления
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for notification in get_recent_notifications(4) %}
+                        <a href="{{ url_for('notifications.view', id=notification.id) }}" 
+                           class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-warning{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <small class="text-muted">{{ notification.created_at|timesince }}</small>
+                                {% if not notification.is_read %}
+                                <span class="badge bg-primary">Новое</span>
+                                {% endif %}
+                            </div>
+                            <p class="mb-1">{{ notification.message|truncate(60) }}</p>
+                        </a>
+                        {% else %}
+                        <div class="list-group-item text-center text-muted py-4">
+                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                            <p>Нет уведомлений</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('notifications.list') }}" class="btn btn-sm btn-outline-primary">
+                        Все уведомления
+                    </a>
+                </div>
+            </div>
+
+            <!-- Виджет помощи -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-question-circle me-2"></i>Быстрая помощь
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="helpAccordion">
+                        {% if user.role == 'manager' %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#help1">
+                                    Как создать заявку?
+                                </button>
+                            </h2>
+                            <div id="help1" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    <small>
+                                        Нажмите "Новая заявка" в меню или на дашборде.<br>
+                                        Заполните все обязательные поля.<br>
+                                        Нажмите "Создать заявку".<br>
+                                        Заявка отправится на валидацию.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if user.role == 'supervisor' %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#help2">
+                                    Как одобрить заявку?
+                                </button>
+                            </h2>
+                            <div id="help2" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    <small>
+                                        Перейдите в "На одобрении".<br>
+                                        Откройте заявку для проверки.<br>
+                                        Нажмите "Одобрить" или "Отклонить".<br>
+                                        При отклонении укажите причину.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#help3">
+                                    Как проверить статус?
+                                </button>
+                            </h2>
+                            <div id="help3" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    <small>
+                                        Откройте заявку из списка.<br>
+                                        Статус отображается в карточке.<br>
+                                        Процент готовности показан в прогресс-баре.<br>
+                                        Уведомления приходят автоматически.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                data-bs-toggle="modal" data-bs-target="#helpModal">
+                            <i class="fas fa-question-circle me-1"></i> Полная инструкция
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно помощи -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="fas fa-question-circle me-2"></i>Помощь по системе
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Основные функции:</h6>
+                        <ul>
+                            <li><strong>Создание заявок</strong> - только менеджеры</li>
+                            <li><strong>Одобрение заявок</strong> - руководители</li>
+                            <li><strong>Выполнение задач</strong> - исполнители</li>
+                            <li><strong>Мониторинг</strong> - начальство</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Статусы заявок:</h6>
+                        <ul>
+                            <li><span class="badge bg-secondary">Черновик</span> - редактирование</li>
+                            <li><span class="badge bg-warning">На одобрении</span> - ожидание</li>
+                            <li><span class="badge bg-success">В работе</span> - выполнение</li>
+                            <li><span class="badge bg-dark">Завершена</span> - готова</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <h6>Контакты поддержки:</h6>
+                <p>
+                    <i class="fas fa-phone me-2"></i> Внутренний: 1234<br>
+                    <i class="fas fa-envelope me-2"></i> support@company.com<br>
+                    <i class="fas fa-clock me-2"></i> Пн-Пт: 9:00-18:00
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <a href="/help/manual.pdf" class="btn btn-primary" download>
+                    <i class="fas fa-download me-1"></i> Скачать инструкцию
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна для задач (для исполнителя) -->
+{% if user.role == 'executor' %}
+{% for task in tasks %}
+<div class="modal fade" id="taskDetailModal{{ task.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Задача: {{ task.title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Описание:</strong><br>{{ task.description or 'Нет описания' }}</p>
+                <p><strong>Заявка:</strong> {{ task.request.request_number }}</p>
+                <p><strong>Срок:</strong> {{ task.deadline.strftime('%d.%m.%Y %H:%M') if task.deadline else 'Не задан' }}</p>
+                <p><strong>Статус:</strong> 
+                    <span class="badge {% if task.status == 'pending' %}bg-secondary{% elif task.status == 'in_progress' %}bg-warning{% elif task.status == 'completed' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ task.status|replace('_', ' ')|title }}
+                    </span>
+                </p>
+                
+                {% if task.status == 'blocked' %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Требуется решение проблемы
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                {% if task.status == 'pending' %}
+                <button type="button" class="btn btn-primary" onclick="updateTaskStatus({{ task.id }}, 'in_progress')">
+                    Начать выполнение
+                </button>
+                {% elif task.status == 'in_progress' %}
+                <button type="button" class="btn btn-success" onclick="updateTaskStatus({{ task.id }}, 'completed')">
+                    Завершить
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Обновление страницы
+document.getElementById('refreshBtn').addEventListener('click', function() {
+    location.reload();
+});
+
+// Обновление статуса задачи (для исполнителей)
+function updateTaskStatus(taskId, newStatus) {
+    fetch(`/api/tasks/${taskId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка обновления статуса');
+    });
+}
+
+// Автообновление каждые 60 секунд
+setTimeout(function() {
+    if (document.hasFocus()) {
+        location.reload();
+    }
+}, 60000);
+
+// Инициализация графиков
+document.addEventListener('DOMContentLoaded', function() {
+    // Пример графика для KPI
+    const ctx = document.getElementById('kpiChart');
+    if (ctx) {
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                datasets: [{
+                    label: 'KPI',
+                    data: [65, 70, 75, 80, 78, 85, 82],
+                    borderColor: '#0d6efd',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

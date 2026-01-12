@@ -1,0 +1,81 @@
+<!-- Виджеты статистики -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted">Всего заявок</h6>
+                        <h3 id="stat-total">{{ stats.total }}</h3>
+                    </div>
+                    <div class="avatar">
+                        <i class="fas fa-clipboard-list fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <div class="progress mt-2">
+                    <div class="progress-bar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted">В работе</h6>
+                        <h3 id="stat-in-progress">{{ stats.in_progress }}</h3>
+                    </div>
+                    <div class="avatar">
+                        <i class="fas fa-cogs fa-2x text-warning"></i>
+                    </div>
+                </div>
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-warning" 
+                         style="width: {{ (stats.in_progress / stats.total * 100) if stats.total > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted">Завершено</h6>
+                        <h3 id="stat-completed">{{ stats.completed }}</h3>
+                    </div>
+                    <div class="avatar">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                </div>
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-success" 
+                         style="width: {{ (stats.completed / stats.total * 100) if stats.total > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card {% if stats.delayed > 0 %}border-danger{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted">С опозданием</h6>
+                        <h3 id="stat-delayed">{{ stats.delayed }}</h3>
+                    </div>
+                    <div class="avatar">
+                        <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                    </div>
+                </div>
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-danger" 
+                         style="width: {{ (stats.delayed / stats.total * 100) if stats.total > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

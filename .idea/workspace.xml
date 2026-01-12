@@ -1,20 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="532a4d71-fb40-4074-86e4-9f876a0352ec" name="Changes" comment="" />
+    <list default="true" id="532a4d71-fb40-4074-86e4-9f876a0352ec" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/CRM_ERP.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/CRM_ERP.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/CRMsys/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/CRMsys/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/CRMsys/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/CRMsys/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/CRMsys/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/CRMsys/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/models/request.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/models/request.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/routes/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/routes/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/routes/requestes.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/routes/requestes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/templates/auth/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/utils/analitics.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/utils/analitics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/utils/notifications.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/utils/notifications.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRMsys/utils/validators.py" beforeDir="false" afterPath="$PROJECT_DIR$/CRMsys/utils/validators.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
   <component name="ProjectId" id="388qSEHuniAh6MMnBkeDwGkDpof" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -23,8 +54,14 @@
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "blackboxai/fix-admin-login-error",
+    "ignore.virus.scanning.warn.message": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -44,8 +81,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1768191543685</updated>
-      <workItem from="1768191544736" duration="7000" />
+      <workItem from="1768191544736" duration="1820000" />
+      <workItem from="1768200212123" duration="3662000" />
+      <workItem from="1768210488192" duration="140000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>8</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

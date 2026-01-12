@@ -1,0 +1,33 @@
+<!-- Последняя активность -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="fas fa-history me-2"></i>Последняя активность</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for activity in activities %}
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <div>
+                        <small class="text-muted">
+                            <i class="fas fa-user me-1"></i>{{ activity.user.full_name }}
+                        </small>
+                        <p class="mb-1">{{ activity.description }}</p>
+                    </div>
+                    <small class="text-muted">{{ activity.timestamp|timesince }}</small>
+                </div>
+            </div>
+            {% else %}
+            <div class="list-group-item text-center text-muted py-4">
+                <i class="fas fa-inbox fa-2x mb-2"></i>
+                <p>Нет активности</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-footer text-center">
+        <a href="{{ url_for('activity.log') }}" class="btn btn-sm btn-outline-primary">
+            Полный журнал активности
+        </a>
+    </div>
+</div>
