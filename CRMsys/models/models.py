@@ -155,6 +155,13 @@ class Request(models.Model):
         self.save()
 
 
+class TaskStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    IN_PROGRESS = 'in_progress', 'In Progress'
+    COMPLETED = 'completed', 'Completed'
+    BLOCKED = 'blocked', 'Blocked'
+
+
 class Task(models.Model):
     request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=200)
@@ -167,7 +174,7 @@ class Task(models.Model):
     completed_date = models.DateTimeField(null=True, blank=True)
 
     # Статус
-    status = models.CharField(max_length=20, default='pending')  # pending, in_progress, completed, blocked
+    status = models.CharField(max_length=20, choices=TaskStatus.choices, default=TaskStatus.PENDING)
     priority = models.CharField(max_length=20, default='medium')
 
     # Сроки

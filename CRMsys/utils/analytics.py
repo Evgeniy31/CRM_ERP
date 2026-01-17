@@ -1,9 +1,7 @@
-import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from sklearn.linear_model import LinearRegression
-from app import db
-from models.request import Request, RequestStatus
+from django.utils import timezone
+from ..models import Request, RequestStatus
 
 
 def predict_completion_date(product_type, priority, quantity):
@@ -66,19 +64,27 @@ def predict_completion_date(product_type, priority, quantity):
 
 def calculate_kpis(user_id, start_date, end_date):
     """Расчет KPI для пользователя"""
-    from models.user import User
-    from models.task import Task
+    from ..models import User, Task
 
-    user = User.query.get(user_id)
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return {
+            'completed_tasks': 0,
+            'avg_completion_time': 0,
+            'on_time_rate': 0,
+            'quality_score': 0,
+            'total_score': 0
+        }
 
     # Задачи пользователя за период
-    tasks = Task.query.filter(
-        Task.executor_id == user_id,
-        Task.completed_date >= start_date,
-        Task.completed_date <= end_date
-    ).all()
+    tasks = Task.objects.filter(
+        executor_id=user_id,
+        completed_date__gte=start_date,
+        completed_date__lte=end_date
+    )
 
-    if not tasks:
+    if not tasks.exists():
         return {
             'completed_tasks': 0,
             'avg_completion_time': 0,
@@ -88,7 +94,7 @@ def calculate_kpis(user_id, start_date, end_date):
         }
 
     # Метрики
-    completed_tasks = len(tasks)
+    completed_tasks = tasks.count()
     total_completion_time = 0
     on_time_count = 0
     quality_score_sum = 0
@@ -129,14 +135,14 @@ def calculate_kpis(user_id, start_date, end_date):
 def generate_production_report(start_date, end_date):
     """Генерация отчета по производству"""
     # Заявки за период
-    requests = Request.query.filter(
-        Request.created_at >= start_date,
-        Request.created_at <= end_date
-    ).all()
+    requests = Request.objects.filter(
+        created_at__gte=start_date,
+        created_at__lte=end_date
+    )
 
     # Сбор статистики
     stats = {
-        'total_requests': len(requests),
+        'total_requests': requests.count(),
         'by_status': {},
         'by_priority': {},
         'by_product_type': {},
@@ -157,7 +163,7 @@ def generate_production_report(start_date, end_date):
 
         # Проверка задержек
         if request.deadline and request.status not in [RequestStatus.COMPLETED, RequestStatus.SHIPPED]:
-            if datetime.utcnow() > request.deadline:
+            if timezone.now() > request.deadline:
                 stats['delayed_requests'] += 1
 
     # Расчет процента завершения
